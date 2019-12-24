@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 
 class Memory(ABC):
@@ -14,6 +14,10 @@ class Memory(ABC):
 
     @abstractmethod
     def __setitem__(self, key: int, value):
+        pass
+
+    @abstractmethod
+    def read_input(self):
         pass
 
 
@@ -82,7 +86,7 @@ class Input(Operation):
     number_of_parameters = 1
 
     def execute(self, memory: Memory):
-        value = int(input("<<< "))
+        value = memory.read_input()
         self.set_parameter(self.parameters[0], memory, value)
 
 
@@ -92,6 +96,7 @@ class Output(Operation):
     def execute(self, memory: Memory):
         value = self.get_parameter(self.parameters[0], memory)
         print(f">>> {value}")
+        return value
 
 
 class Halt(Operation):
@@ -154,6 +159,9 @@ class IntCode(Memory):
         self._code = code
         self._memory = defaultdict(int)
         self.ip = 0
+        self.output: List[int] = []
+        self.input: List[int] = []
+        self.halted = False
         self.reset()
 
     def reset(self):
@@ -162,18 +170,32 @@ class IntCode(Memory):
         for i in range(0, len(instructions)):
             self[i] = int(instructions[i])
         self.ip = 0
+        self.output = []
 
     def run(self):
-        while True:
+        while not self.halted:
             prev_ip = self.ip
             operation = self._parse_opcode(self[self.ip])
             try:
-                operation.execute(self)
+                ret_val = operation.execute(self)
+                if ret_val is not None:
+                    self.output.append(ret_val)
+                    break
             except HaltException:
+                self.halted = True
                 break
 
             if self.ip == prev_ip:
                 self.ip += operation.number_of_parameters + 1
+
+    def read_input(self):
+        if self.input:
+            return self.input.pop(0)
+        else:
+            return int(input("<<< "))
+
+    def add_input(self, value: int):
+        self.input.append(value)
 
     def _parse_opcode(self, op: int) -> Operation:
         instruction_code = f"{op:05}"
