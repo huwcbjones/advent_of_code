@@ -1,4 +1,3 @@
-from StringIO import StringIO
 from dataclasses import dataclass
 from typing import IO, Optional, Set, Dict
 
@@ -49,6 +48,35 @@ def calculate_object_orbits(obj: Object):
         calculate_object_orbits(child)
 
 
+def get_route_to_com(obj: Object):
+    route = []
+    while obj := obj.parent:
+        route.append(obj.id)
+    route.reverse()
+    return route
+
+
+def get_route_between_nodes(start: Object, end: Object):
+    start_to_com = get_route_to_com(start)
+    end_to_com = get_route_to_com(end)
+    i, j = 0, 0
+    intersection = None
+
+    while i != len(start_to_com) or j != len(end_to_com):
+
+        # Keep moving forward until no intersection is found
+        if i == j and start_to_com[i] == end_to_com[j]:
+            i += 1
+            j += 1
+        else:
+            intersection = j - 1
+            break
+    return (
+        start_to_com[len(start_to_com) : intersection : -1]
+        + end_to_com[intersection : len(end_to_com)]
+    )
+
+
 def part1():
     with open("day_06-input.txt", "r") as f:
         objects = parse_map(f)
@@ -57,13 +85,12 @@ def part1():
 
 
 def part2():
-    objects = parse_map(
-        StringIO(
-            "COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN"
-        )
-    )
+    with open("day_06-input.txt", "r") as f:
+        objects = parse_map(f)
+    route = get_route_between_nodes(objects["YOU"], objects["SAN"])
+    print(len(route) - 1)
 
 
 if __name__ == "__main__":
     part1()
-    # part2()
+    part2()
