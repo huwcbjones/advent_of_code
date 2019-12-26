@@ -10,6 +10,7 @@ SUPPRESS_OUTPUT = True
 class ParameterMode(IntEnum):
     POSITION = 0
     IMMEDIATE = 1
+    RELATIVE = 2
 
 
 @dataclass
@@ -20,6 +21,7 @@ class Parameter:
 
 class Memory(ABC):
     ip: int
+    relative_base: int
 
     @abstractmethod
     def __getitem__(self, item: int):
@@ -47,7 +49,6 @@ class HaltException(Exception):
 
 
 class Operation(ABC):
-
     number_of_parameters: int
     parameters: Dict[int, Parameter]
 
@@ -142,6 +143,15 @@ class Equals(Operation):
         return
 
 
+class ChangeRelativeBase(Operation):
+    number_of_parameters = 1
+
+    def execute(self, memory: Memory) -> Optional[int]:
+        offset = memory.get(self.parameters[0])
+        memory.relative_base += offset
+        return
+
+
 class IntCode(Memory):
     op_code_map = {
         1: Add,
@@ -152,6 +162,7 @@ class IntCode(Memory):
         6: JumpIfFalse,
         7: LessThan,
         8: Equals,
+        9: ChangeRelativeBase,
         99: Halt,
     }
 
@@ -159,6 +170,7 @@ class IntCode(Memory):
         self._code = code
         self._memory = defaultdict(int)
         self.ip = 0
+        self.relative_base = 0
         self.output: List[int] = []
         self.input: List[int] = []
         self.halted = False
@@ -174,6 +186,7 @@ class IntCode(Memory):
         for i in range(0, len(instructions)):
             self[i] = int(instructions[i])
         self.ip = 0
+        self.relative_base = 0
         self.output = []
         self.halted = False
 
@@ -228,16 +241,18 @@ class IntCode(Memory):
         self._memory[key] = value
 
     def _get_address(self, address: Parameter):
-        return self.ip + 1 + address.position
+        if address.mode == ParameterMode.RELATIVE:
+            offset = self[self.ip + 1 + address.position]
+            return self.relative_base + offset
+
+        address_ptr = self.ip + 1 + address.position
+        if address.mode == ParameterMode.POSITION:
+            return self[address_ptr]
+
+        return address_ptr
 
     def get(self, address: Parameter) -> int:
-        parameter_pointer = self._get_address(address)
-
-        if address.mode == ParameterMode.IMMEDIATE:
-            return self[parameter_pointer]
-        elif address.mode == ParameterMode.POSITION:
-            return self[self[parameter_pointer]]
+        return self[self._get_address(address)]
 
     def set(self, address: Parameter, value: int):
-        address_ptr = self._get_address(address)
-        self[self[address_ptr]] = value
+        self[self._get_address(address)] = value

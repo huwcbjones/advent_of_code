@@ -1,9 +1,15 @@
+from math import log10
 from unittest import TestCase
 
+import intcode
 from intcode import IntCode
 
 
 class IntCodeTest(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        intcode.SUPPRESS_OUTPUT = False
+
     def test_add(self):
         ic = IntCode("1, 1, 2, 0, 99")
         ic.run()
@@ -113,3 +119,20 @@ class IntCodeTest(TestCase):
         ic.reset()
         ic.run()
         self.assertEqual(1001, ic.output[0])
+
+    def test_relative_mode_output(self):
+        ic = IntCode("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99")
+        ic.run()
+        output = reversed(ic.output)
+        output_code = ",".join([str(i) for i in output])
+        self.assertEqual(ic._code, output_code)
+
+    def test_relative_mode_16_digit_number(self):
+        ic = IntCode("1102,34915192,34915192,7,4,7,99,0")
+        ic.run()
+        self.assertEqual(16, int(log10(ic.output[0])) + 1)
+
+    def test_relative_mode(self):
+        ic = IntCode("104,1125899906842624,99")
+        ic.run()
+        self.assertEqual(1125899906842624, ic.output[0])
