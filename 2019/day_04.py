@@ -59,11 +59,13 @@ def get_combinations(start: int, end: int, func: Callable[[int], bool]) -> List[
 def part1():
     combinations = get_combinations(264793, 803935, is_combination_valid_p1)
     print("P1: %s" % len(combinations))
+    assert len(combinations) == 966
 
 
 def part2():
     combinations = get_combinations(264793, 803935, is_combination_valid_p2)
     print("P2: %s" % len(combinations))
+    assert len(combinations) == 628
 
 
 if __name__ == "__main__":

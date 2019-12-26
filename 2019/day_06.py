@@ -80,15 +80,18 @@ def get_route_between_nodes(start: Object, end: Object):
 def part1():
     with open("day_06-input.txt", "r") as f:
         objects = parse_map(f)
-
-    print(sum([o.orbit_count for o in objects.values() if o.id != "COM"]))
+    orbit_count = sum([o.orbit_count for o in objects.values() if o.id != "COM"])
+    print(orbit_count)
+    assert orbit_count == 417916
 
 
 def part2():
     with open("day_06-input.txt", "r") as f:
         objects = parse_map(f)
     route = get_route_between_nodes(objects["YOU"], objects["SAN"])
-    print(len(route) - 1)
+    orbital_hops = len(route) - 1
+    print(orbital_hops)
+    assert orbital_hops == 523
 
 
 if __name__ == "__main__":

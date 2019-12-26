@@ -5,6 +5,7 @@ def part1(ic: IntCode):
     ic[1] = 12
     ic[2] = 2
     ic.run()
+    assert ic[0] == 3058646
     print(ic[0])
 
 
@@ -17,6 +18,7 @@ def part2(ic: IntCode):
             ic.run()
             if ic[0] == 19690720:
                 print(f"{i}, {j} = {ic[0]}")
+                assert i == 89 and j == 76
                 break
 
 

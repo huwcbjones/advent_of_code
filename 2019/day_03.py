@@ -129,7 +129,9 @@ def part1():
         wire_b = get_wire(f.readline())
 
     intersections = get_intersections(wire_a, wire_b)
-    print(min([manhattan_distance(p) for p in intersections]))
+    minimum_distance = min([manhattan_distance(p) for p in intersections])
+    print("Min Manhatten: %s" % minimum_distance)
+    assert minimum_distance == 1519
 
 def part2():
     with open("day_03-input.txt", "r") as f:
@@ -141,7 +143,9 @@ def part2():
         i: get_path_distance(wire_a, i) + get_path_distance(wire_b, i)
         for i in intersections
     }
-    print("Path: %s" % min(distances.values()))
+    minimum_path_length = min(distances.values())
+    print("Path: %s" % minimum_path_length)
+    assert minimum_path_length == 14358
 
 
 def process_path(wire_a_str: str, wire_b_str: str):
@@ -175,8 +179,5 @@ def test3():
 
 
 if __name__ == "__main__":
-    # test1()
-    # test2()
-    # test3()
-    # part1()
+    part1()
     part2()

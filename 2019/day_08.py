@@ -89,9 +89,11 @@ class Image:
 
 def part1(image: Image):
     print(image.checksum)
+    assert image.checksum == 2193
 
 
 def part2(image: Image):
+    # Should output "YEHEF"
     print(image.rendered_image.replace("1", "█").replace("0", "░"))
 
 

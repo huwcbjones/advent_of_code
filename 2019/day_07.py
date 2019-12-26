@@ -32,6 +32,7 @@ def part1():
         results.append((config, get_thruster_signal(ic, config)))
     results = sorted(results, key=lambda x: x[1], reverse=True)
     print(results[0])
+    assert results[0][1] == 262086
 
 
 def part2():
@@ -44,6 +45,7 @@ def part2():
         results.append((config, get_thruster_signal(ic, config)))
     results = sorted(results, key=lambda x: x[1], reverse=True)
     print(results[0])
+    assert results[0][1] == 5371621
 
 
 if __name__ == "__main__":
