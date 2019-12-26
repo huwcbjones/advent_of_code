@@ -1,9 +1,19 @@
-from unittest import TestCase, mock
+from unittest import TestCase
 
 from intcode import IntCode
 
 
 class IntCodeTest(TestCase):
+    def test_add(self):
+        ic = IntCode("1, 1, 2, 0, 99")
+        ic.run()
+        self.assertEqual(3, ic[0])
+
+    def test_multiply(self):
+        ic = IntCode("2, 1, 2, 0, 99")
+        ic.run()
+        self.assertEqual(2, ic[0])
+
     def test_simple(self):
         ic = IntCode("1,9,10,3,2,3,11,0,99,30,40,50")
         ic.run()

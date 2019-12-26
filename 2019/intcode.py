@@ -4,6 +4,19 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Optional, Dict, List
 
+SUPPRESS_OUTPUT = True
+
+
+class ParameterMode(IntEnum):
+    POSITION = 0
+    IMMEDIATE = 1
+
+
+@dataclass
+class Parameter:
+    position: int
+    mode: ParameterMode
+
 
 class Memory(ABC):
     ip: int
@@ -20,126 +33,113 @@ class Memory(ABC):
     def read_input(self):
         pass
 
+    @abstractmethod
+    def get(self, address: Parameter):
+        pass
+
+    @abstractmethod
+    def set(self, address: Parameter, value: int):
+        pass
+
 
 class HaltException(Exception):
     pass
 
 
-class ParameterMode(IntEnum):
-    POSITION = 0
-    IMMEDIATE = 1
-
-
-@dataclass
-class Parameter:
-    position: int
-    mode: ParameterMode
-
-
 class Operation(ABC):
 
-    number_of_parameters: Optional[int]
+    number_of_parameters: int
     parameters: Dict[int, Parameter]
 
     @abstractmethod
-    def execute(self, memory: Memory):
+    def execute(self, memory: Memory) -> Optional[int]:
         pass
-
-    @staticmethod
-    def get_parameter(parameter: Parameter, memory: Memory):
-        parameter_pointer = Operation._get_parameter_pointer(parameter, memory)
-
-        if parameter.mode == ParameterMode.IMMEDIATE:
-            return memory[parameter_pointer]
-        elif parameter.mode == ParameterMode.POSITION:
-            return memory[memory[parameter_pointer]]
-
-    @staticmethod
-    def set_parameter(parameter: Parameter, memory: Memory, value):
-        parameter_pointer = Operation._get_parameter_pointer(parameter, memory)
-        memory[memory[parameter_pointer]] = value
-
-    @staticmethod
-    def _get_parameter_pointer(parameter: Parameter, memory: Memory):
-        return memory.ip + 1 + parameter.position
 
 
 class Multiply(Operation):
     number_of_parameters = 3
 
-    def execute(self, memory: Memory):
-        a = self.get_parameter(self.parameters[0], memory)
-        b = self.get_parameter(self.parameters[1], memory)
-        self.set_parameter(self.parameters[2], memory, a * b)
+    def execute(self, memory: Memory) -> Optional[int]:
+        a = memory.get(self.parameters[0])
+        b = memory.get(self.parameters[1])
+        memory.set(self.parameters[2], a * b)
+        return
 
 
 class Add(Operation):
     number_of_parameters = 3
 
-    def execute(self, memory: Memory):
-        a = self.get_parameter(self.parameters[0], memory)
-        b = self.get_parameter(self.parameters[1], memory)
-        self.set_parameter(self.parameters[2], memory, a + b)
+    def execute(self, memory: Memory) -> Optional[int]:
+        a = memory.get(self.parameters[0])
+        b = memory.get(self.parameters[1])
+        memory.set(self.parameters[2], a + b)
+        return
 
 
 class Input(Operation):
     number_of_parameters = 1
 
-    def execute(self, memory: Memory):
+    def execute(self, memory: Memory) -> Optional[int]:
         value = memory.read_input()
-        self.set_parameter(self.parameters[0], memory, value)
+        memory.set(self.parameters[0], value)
+        return
 
 
 class Output(Operation):
     number_of_parameters = 1
 
-    def execute(self, memory: Memory):
-        value = self.get_parameter(self.parameters[0], memory)
-        print(f">>> {value}")
+    def execute(self, memory: Memory) -> Optional[int]:
+        value = memory.get(self.parameters[0])
+        if not SUPPRESS_OUTPUT:
+            print(f">>> {value}\n")
         return value
 
 
 class Halt(Operation):
     number_of_parameters = 0
 
-    def execute(self, memory: Memory):
+    def execute(self, memory: Memory) -> Optional[int]:
         raise HaltException()
 
 
 class JumpIfTrue(Operation):
     number_of_parameters = 2
 
-    def execute(self, memory: Memory):
-        value = self.get_parameter(self.parameters[0], memory)
+    def execute(self, memory: Memory) -> Optional[int]:
+        value = memory.get(self.parameters[0])
         if value != 0:
-            memory.ip = self.get_parameter(self.parameters[1], memory)
+            memory.ip = memory.get(self.parameters[1])
+        return
 
 
 class JumpIfFalse(Operation):
     number_of_parameters = 2
 
-    def execute(self, memory: Memory):
-        value = self.get_parameter(self.parameters[0], memory)
+    def execute(self, memory: Memory) -> Optional[int]:
+        value = memory.get(self.parameters[0])
         if value == 0:
-            memory.ip = self.get_parameter(self.parameters[1], memory)
+            memory.ip = memory.get(self.parameters[1])
+        return
 
 
 class LessThan(Operation):
     number_of_parameters = 3
 
-    def execute(self, memory: Memory):
-        a = self.get_parameter(self.parameters[0], memory)
-        b = self.get_parameter(self.parameters[1], memory)
-        self.set_parameter(self.parameters[2], memory, int(a < b))
+    def execute(self, memory: Memory) -> Optional[int]:
+        a = memory.get(self.parameters[0])
+        b = memory.get(self.parameters[1])
+        memory.set(self.parameters[2], int(a < b))
+        return
 
 
 class Equals(Operation):
     number_of_parameters = 3
 
-    def execute(self, memory: Memory):
-        a = self.get_parameter(self.parameters[0], memory)
-        b = self.get_parameter(self.parameters[1], memory)
-        self.set_parameter(self.parameters[2], memory, int(a == b))
+    def execute(self, memory: Memory) -> Optional[int]:
+        a = memory.get(self.parameters[0])
+        b = memory.get(self.parameters[1])
+        memory.set(self.parameters[2], int(a == b))
+        return
 
 
 class IntCode(Memory):
@@ -164,6 +164,10 @@ class IntCode(Memory):
         self.halted = False
         self.reset()
 
+    @property
+    def code(self) -> str:
+        return self._code
+
     def reset(self):
         self._memory = defaultdict(int)
         instructions = self._code.split(",")
@@ -171,16 +175,15 @@ class IntCode(Memory):
             self[i] = int(instructions[i])
         self.ip = 0
         self.output = []
+        self.halted = False
 
-    def run(self):
+    def run(self, pause_on_output=False):
         while not self.halted:
             prev_ip = self.ip
             operation = self._parse_opcode(self[self.ip])
             try:
                 ret_val = operation.execute(self)
-                if ret_val is not None:
-                    self.output.append(ret_val)
-                    break
+
             except HaltException:
                 self.halted = True
                 break
@@ -188,14 +191,24 @@ class IntCode(Memory):
             if self.ip == prev_ip:
                 self.ip += operation.number_of_parameters + 1
 
+            if ret_val is None:
+                continue
+
+            self.output.insert(0, ret_val)
+            if pause_on_output:
+                break
+
     def read_input(self):
         if self.input:
-            return self.input.pop(0)
+            input_value = self.input.pop(0)
+            if not SUPPRESS_OUTPUT:
+                print(f"<<< {input_value}")
+            return input_value
         else:
             return int(input("<<< "))
 
-    def add_input(self, value: int):
-        self.input.append(value)
+    def add_input(self, *values: int):
+        self.input += values
 
     def _parse_opcode(self, op: int) -> Operation:
         instruction_code = f"{op:05}"
@@ -213,3 +226,18 @@ class IntCode(Memory):
 
     def __setitem__(self, key, value):
         self._memory[key] = value
+
+    def _get_address(self, address: Parameter):
+        return self.ip + 1 + address.position
+
+    def get(self, address: Parameter) -> int:
+        parameter_pointer = self._get_address(address)
+
+        if address.mode == ParameterMode.IMMEDIATE:
+            return self[parameter_pointer]
+        elif address.mode == ParameterMode.POSITION:
+            return self[self[parameter_pointer]]
+
+    def set(self, address: Parameter, value: int):
+        address_ptr = self._get_address(address)
+        self[self[address_ptr]] = value
