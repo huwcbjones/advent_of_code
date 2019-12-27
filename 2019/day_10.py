@@ -1,5 +1,5 @@
 import logging
-from functools import lru_cache
+from math import atan2, pi, degrees, sqrt
 from typing import List, Tuple, Optional, Dict, Set, NamedTuple, Union
 
 
@@ -92,8 +92,43 @@ class AsteroidField:
     def get_visible_asteroid_count(self, position: CoOrd):
         return self._asteroids[position]
 
+    def vaporise_asteroids(self, source: CoOrd):
+        asteroids: List[Tuple[CoOrd, float, float]] = [
+            (
+                c,
+                get_angle_between_points(source, c),
+                get_distance_between_points(source, c),
+            )
+            for c in self._asteroids.keys()
+            if c != source
+        ]
+        asteroids = sorted(asteroids, key=lambda x: (x[1], x[2]))
+        count = 0
+        while asteroids:
+            last_angle: Optional[float] = None
 
-@lru_cache
+            for i, ast in enumerate(asteroids.copy()):
+                if last_angle is not None and last_angle == ast[1]:
+                    continue
+
+                count += 1
+                last_angle = ast[1]
+                print(f"{count:>5}: {ast[0]} ({ast[1]})")
+                asteroids.remove(ast)
+
+
+def get_angle_between_points(source: CoOrd, target: CoOrd) -> float:
+    angle = atan2(target.x - source.x, target.y - source.y)
+    angle = -1 * degrees(angle - pi)
+    if angle < 0:
+        angle += 360
+    return angle
+
+
+def get_distance_between_points(source: CoOrd, target: CoOrd) -> float:
+    return sqrt((target.x - source.x) ** 2 + (target.y - source.y) ** 2)
+
+
 def get_smallest_int_delta(
     x: Union[int, float], y: Union[int, float]
 ) -> Tuple[int, int]:
@@ -101,8 +136,9 @@ def get_smallest_int_delta(
     return int(x / gcd), int(y / gcd)
 
 
-@lru_cache
 def get_greatest_common_divider(x, y):
+    x = abs(x)
+    y = abs(y)
     while y:
         x, y = y, x % y
 
@@ -159,11 +195,20 @@ def part1():
     with open("day_10-input.txt", "r") as f:
         field = AsteroidField(f.read())
     best_position = field.get_best_monitoring_position()
-    print(field.get_visible_asteroid_count(best_position))
+    visible_asteroids = field.get_visible_asteroid_count(best_position)
+    print(f"{best_position}: {visible_asteroids}")
+    assert visible_asteroids == 221
+
+
+def part2():
+    with open("day_10-input.txt", "r") as f:
+        field = AsteroidField(f.read())
+    field.vaporise_asteroids(CoOrd(11, 11))
 
 
 if __name__ == "__main__":
-    # test1()
-    # test2()
-    # test3()
+    test1()
+    test2()
+    test3()
     part1()
+    part2()
