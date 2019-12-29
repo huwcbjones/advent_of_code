@@ -1,8 +1,9 @@
-from dataclasses import dataclass
-from itertools import permutations, product, combinations
-from typing import NamedTuple, Tuple, List, Iterable
 import time
+from dataclasses import dataclass
+from itertools import combinations
 from math import floor
+from typing import NamedTuple, Tuple, List, Iterable, Optional
+
 
 class Vector(NamedTuple):
     x: int = 0
@@ -64,18 +65,23 @@ def compare(a: int, b: int) -> int:
     return -1
 
 
-def _apply_gravity(moons: Iterable[Satellite]):
+def _apply_gravity(moons: Iterable[Satellite], axis: Optional[List[str]] = None):
+    if axis is None:
+        axis = ["x", "y", "z"]
     for a, b in combinations(moons, r=2):
-        # print(f"Applying gravity to {a.name[0]}|{b.name[0]}")
-        _apply_gravity_to_pair(a, b)
+        _apply_gravity_to_pair(a, b, axis)
 
 
-def _apply_gravity_to_pair(a: Satellite, b: Satellite):
-    vector = (
-        compare(a.position.x, b.position.x),
-        compare(a.position.y, b.position.y),
-        compare(a.position.z, b.position.z),
-    )
+def _apply_gravity_to_pair(a: Satellite, b: Satellite, axis: List[str]):
+    x, y, z = 0, 0, 0
+    if "x" in axis:
+        x = compare(a.position.x, b.position.x)
+    if "y" in axis:
+        y = compare(a.position.y, b.position.y)
+    if "z" in axis:
+        z = compare(a.position.z, b.position.z)
+
+    vector = (x, y, z)
 
     a.velocity += vector
     b.velocity -= vector
@@ -101,9 +107,49 @@ def calculate_energy(moon: Satellite) -> int:
     return total
 
 
-def do_tick(moons: Iterable[Satellite]):
-    _apply_gravity(moons)
+def do_tick(moons: Iterable[Satellite], axis: Optional[List[str]] = None):
+    _apply_gravity(moons, axis)
     _apply_velocity(moons)
+
+
+def gcf(a: int, b: int) -> int:
+    a = abs(a)
+    b = abs(b)
+    while b:
+        a, b = b, a % b
+
+    return a
+
+
+def lcm(*values: int) -> int:
+    if len(values) == 1:
+        return values[0]
+    a = values[0]
+    b = values[1]
+    result = floor(a * b / gcf(a, b))
+    if len(values) == 2:
+        return result
+    return lcm(result, *values[2:])
+
+
+def find_period(moons: List[Satellite], axis: str) -> int:
+    start_state = [m.clone() for m in moons]
+    counter = 0
+
+    start = time.monotonic()
+    while True:
+        do_tick(moons, [axis])
+        counter += 1
+        if counter % 1000 == 0:
+            time_taken = time.monotonic() - start
+            taken = "{:0>2}:{:0>2.0f}".format(floor(time_taken / 60), time_taken % 60)
+            print(f"\rProcessed {counter:>10} ticks in {taken}", end="")
+
+        if moons == start_state:
+            print()
+            break
+
+    return counter
 
 
 def main():
@@ -113,8 +159,8 @@ def main():
         Satellite("Ganymede", Vector(-4, -6, 7), Vector.origin()),
         Satellite("Callisto", Vector(6, -9, -11), Vector.origin()),
     ]
-    # part1(moons)
-    part2(moons)
+    part1([m.clone() for m in moons])
+    part2([m.clone() for m in moons])
 
 
 def part1(moons):
@@ -127,26 +173,18 @@ def part1(moons):
 
 
 def part2(moons):
-    moons = set(moons)
-    previous_states = {m.clone() for m in moons}
-    counter = 0
+    x_period = find_period([m.clone() for m in moons], "x")
+    print(f"X Period: {x_period}")
 
-    start = time.monotonic()
-    while True:
-        do_tick(moons)
-        counter += 1
-        if counter % 1000 == 0:
-            time_taken = time.monotonic() - start
-            taken = "{:0>2}:{:0>2.0f}".format(floor(time_taken / 60), time_taken % 60)
-            print(f"\rProcessed {counter:>10} ticks in {taken}", end="")
-        if frozenset(moons) in previous_states:
-            break
-        previous_states.add(frozenset([m.clone() for m in moons]))
+    y_period = find_period([m.clone() for m in moons], "y")
+    print(f"Y Period: {y_period}")
 
-    print(f"Total Ticks: {counter}")
-    for moon in moons:
-        print(f"{moon}")
-    # assert 14606 == total_energy
+    z_period = find_period([m.clone() for m in moons], "z")
+    print(f"Z Period: {z_period}")
+
+    total_period = lcm(x_period, y_period, z_period)
+    print(f"Total Ticks: {total_period}")
+    assert total_period == 543673227860472
 
 
 if __name__ == "__main__":
