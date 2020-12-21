@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Callable
 
 SUPPRESS_OUTPUT = True
 
@@ -166,9 +166,14 @@ class IntCode(Memory):
         99: Halt,
     }
 
-    def __init__(self, code: str):
+    def __init__(self, code: str, input_func: Optional[Callable[[], int]] = None):
         self._code = code
         self._memory = defaultdict(int)
+
+        self.read_input: Callable[[], int] = input_func
+        if input_func is None:
+            self.read_input = self._read_input
+
         self.ip = 0
         self.relative_base = 0
         self.output: List[int] = []
@@ -211,7 +216,10 @@ class IntCode(Memory):
             if pause_on_output:
                 break
 
-    def read_input(self):
+    def read_input(self) -> int:
+        return self._read_input()
+
+    def _read_input(self) -> int:
         if self.input:
             input_value = self.input.pop(0)
             if not SUPPRESS_OUTPUT:
