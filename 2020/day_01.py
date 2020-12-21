@@ -8,7 +8,9 @@ def convert_entries(input: Iterable[str]) -> List[int]:
     return sorted([int(i) for i in input])
 
 
-def find_entries(entries: Iterable[int], target: int = 2020, count: int = 2) -> Optional[Tuple[int, ...]]:
+def find_entries(
+    entries: Iterable[int], target: int = 2020, count: int = 2
+) -> Optional[Tuple[int, ...]]:
     for values in permutations(entries, count):
         if sum(values) == target:
             return values

@@ -38,7 +38,9 @@ def validate_sled_password_entry(entry: str) -> bool:
 
 
 def validate_toboggan_password(password: str, policy: Policy) -> bool:
-    return (password[policy.pos_a - 1] == policy.char) ^ (password[policy.pos_b - 1] == policy.char)
+    return (password[policy.pos_a - 1] == policy.char) ^ (
+        password[policy.pos_b - 1] == policy.char
+    )
 
 
 def validate_toboggan_password_entry(entry: str) -> bool:
@@ -47,11 +49,16 @@ def validate_toboggan_password_entry(entry: str) -> bool:
 
 
 class Day2Test(TestCase):
-
     def test_parse_entry(self):
-        self.assertTupleEqual(("abcde", Policy(1, 3, "a")), parse_password_entry("1-3 a: abcde"))
-        self.assertTupleEqual(("cdefg", Policy(1, 3, "b")), parse_password_entry("1-3 b: cdefg"))
-        self.assertTupleEqual(("ccccccccc", Policy(2, 9, "c")), parse_password_entry("2-9 c: ccccccccc"))
+        self.assertTupleEqual(
+            ("abcde", Policy(1, 3, "a")), parse_password_entry("1-3 a: abcde")
+        )
+        self.assertTupleEqual(
+            ("cdefg", Policy(1, 3, "b")), parse_password_entry("1-3 b: cdefg")
+        )
+        self.assertTupleEqual(
+            ("ccccccccc", Policy(2, 9, "c")), parse_password_entry("2-9 c: ccccccccc")
+        )
 
     def test_validate_sled_password(self):
         self.assertTrue(validate_sled_password_entry("1-3 a: abcde"))
