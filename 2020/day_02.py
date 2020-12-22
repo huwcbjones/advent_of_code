@@ -73,6 +73,10 @@ class Day2Test(TestCase):
 
 if __name__ == "__main__":
     with open("day_02-input.txt", "r") as fh:
-        print(len([l for l in fh if validate_sled_password_entry(l)]))
+        part_1 = len([l for l in fh if validate_sled_password_entry(l)])
+        print(part_1)  # Part 1: 614
+
         fh.seek(0)
-        print(len([l for l in fh if validate_toboggan_password_entry(l)]))
+
+        part_2 = len([l for l in fh if validate_toboggan_password_entry(l)])
+        print(part_2)  # Part 2: 354

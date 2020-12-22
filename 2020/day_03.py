@@ -131,5 +131,9 @@ class Day03Test(TestCase):
 if __name__ == "__main__":
     with open("day_03-input.txt", "r") as fh:
         map = parse_map(fh)
-        print(count_trees(map, 3, 1))
-        print(prod(check_slopes(map)))
+
+        part_1 = count_trees(map, 3, 1)
+        print(part_1)  # Part 1: 292
+
+        part_2 = prod(check_slopes(map))
+        print(part_2)  # Part 2: 9354744432

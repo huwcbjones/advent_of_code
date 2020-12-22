@@ -266,5 +266,9 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 if __name__ == "__main__":
     with open("day_04-input.txt", "r") as fh:
         passports = parse_batch_file(fh)
-        print(len([p for p in passports if p.is_valid()]))
-        print(len([p for p in passports if p.is_valid(extra_validation=True)]))
+
+        part_1 = len([p for p in passports if p.is_valid()])
+        print(part_1)  # Part 1: 210
+
+        part_2 = len([p for p in passports if p.is_valid(extra_validation=True)])
+        print(part_2)  # Part 2: 131

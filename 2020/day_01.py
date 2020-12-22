@@ -51,6 +51,10 @@ class FindEntriesTest(TestCase):
 
 if __name__ == "__main__":
     with open("day_01-input.txt", "r") as fh:
-        print(calculate_expenses(fh, 2))
+        part_1 = calculate_expenses(fh, 2)
+        print(part_1)  # Part 1: 928896
+
         fh.seek(0)
-        print(calculate_expenses(fh, 3))
+
+        part_2 = calculate_expenses(fh, 3)
+        print(part_2)  # Part 2: 295668576
