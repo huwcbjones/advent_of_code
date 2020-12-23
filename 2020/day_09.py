@@ -1,4 +1,4 @@
-from itertools import permutations
+from itertools import combinations
 from typing import Iterable, List
 from unittest import TestCase
 
@@ -9,7 +9,7 @@ def parse_input(data: Iterable[str]) -> List[int]:
 
 def find_invalid(data: List[int], preamble: int) -> int:
     for i in range(preamble, len(data) + 1):
-        if not any(sum(p) == data[i] for p in permutations(data[i - preamble : i], 2)):
+        if not any(sum(p) == data[i] for p in combinations(data[i - preamble : i], 2)):
             return data[i]
 
 

@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import Dict, Iterable, List, Set
+from typing import Dict, Iterable, Set
 from unittest import TestCase
 
 RULE_REGEX = re.compile(r"([a-z ]+) bags contain (.*)\.")

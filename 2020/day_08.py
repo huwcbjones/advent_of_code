@@ -1,8 +1,8 @@
+import logging
 import re
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from typing import Iterable, List
 from unittest import TestCase
-import logging
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("bootcode")

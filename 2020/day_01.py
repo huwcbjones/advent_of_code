@@ -1,6 +1,6 @@
-from itertools import permutations
+from itertools import combinations
 from math import prod
-from typing import Iterable, Tuple, List, Optional
+from typing import Iterable, List, Optional, Tuple
 from unittest import TestCase
 
 
@@ -11,7 +11,7 @@ def convert_entries(input: Iterable[str]) -> List[int]:
 def find_entries(
     entries: Iterable[int], target: int = 2020, count: int = 2
 ) -> Optional[Tuple[int, ...]]:
-    for values in permutations(entries, count):
+    for values in combinations(entries, count):
         if sum(values) == target:
             return values
     return None

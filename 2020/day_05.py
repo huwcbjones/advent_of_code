@@ -1,5 +1,5 @@
 from math import floor
-from typing import Iterable, List
+from typing import List
 from unittest import TestCase
 
 

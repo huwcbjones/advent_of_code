@@ -1,4 +1,4 @@
-from typing import Set, Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Set
 from unittest import TestCase
 
 

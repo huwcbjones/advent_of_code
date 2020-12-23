@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Iterable, Tuple
+from typing import Dict, Iterable, List, Tuple
 from unittest import TestCase
 
 
