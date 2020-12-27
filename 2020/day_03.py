@@ -1,8 +1,9 @@
 from collections import deque
-from enum import Enum
 from math import prod
 from typing import Deque, Iterable, List, Sequence, Tuple, TypeVar
 from unittest import TestCase
+
+from utils import Enum
 
 
 class Square(str, Enum):

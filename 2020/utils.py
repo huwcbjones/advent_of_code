@@ -1,6 +1,7 @@
 import atexit
 import functools
 import time
+from enum import Enum as _Enum
 
 _PROFILE_STATS = {}
 
@@ -33,3 +34,17 @@ def print_stats():
 
 
 atexit.register(print_stats)
+
+
+class Enum(_Enum):
+    @classmethod
+    def values(cls):
+        """Values of this enum"""
+        if not hasattr(cls, "__values__"):
+            setattr(cls, "__values__", set(i.value for i in cls))
+        return getattr(cls, "__values__")
+
+    @classmethod
+    def contains(cls, value):
+        """Returns whether the Enum contains the given value"""
+        return value in cls.values()
