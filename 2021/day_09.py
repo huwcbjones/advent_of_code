@@ -5,7 +5,7 @@ from pathlib import Path
 def get_adjacent_points(
     heightmap: dict[int, dict[int, int]], x: int, y: int
 ) -> list[tuple[int, int]]:
-    adjacent_points: list[int] = []
+    adjacent_points: list[tuple[int, int]] = []
     for dx in [-1, 1]:
         try:
             _ = heightmap[y][x + dx]
@@ -36,26 +36,20 @@ def find_largest_three_basins(
 ) -> int:
     basins: list[int] = []
     for low_point, height in low_points.items():
-        print("===")
-        basin_size: int = 1
         checked_points: set[tuple[int, int]] = {low_point}
         points_to_check: set[tuple[int, int, int]] = {
             p + (height,) for p in get_adjacent_points(heightmap, *low_point)
         }
-        print(f" -> {low_point[0]},{low_point[1]} ({height})")
         while points_to_check:
             x, y, compare_height = points_to_check.pop()
             height = heightmap[y][x]
-            if height == compare_height + 1 and height != 9:
-                print(f" -> {x},{y} ({height})")
-                basin_size += 1
+            if compare_height <= height < 9:
                 checked_points.add((x, y))
                 for adjacent_point in get_adjacent_points(heightmap, x, y):
                     if adjacent_point not in checked_points:
                         points_to_check.add(adjacent_point + (height,))
-        basins.append(basin_size)
+        basins.append(len(checked_points))
     basins.sort(reverse=True)
-    print(basins)
     return reduce(lambda v, e: v * e, basins[:3])
 
 
