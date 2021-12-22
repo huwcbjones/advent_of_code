@@ -1,31 +1,28 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import pairwise
 from pathlib import Path
 
 
-def polymerase(polymer: str, rules: dict[str, str]) -> str:
-    insertions: dict[int, str] = {}
-    index = 0
-    for pair in pairwise(polymer):
-        index += 1
-        if insertion := rules.get(f"{pair[0]}{pair[1]}", ""):
-            insertions[index] = insertion
-    new_polymer = list(polymer)
-    for index, insertion in sorted(insertions.items(), reverse=True):
-        new_polymer.insert(index, insertion)
-    return "".join(new_polymer)
+def run_polymerase(polymer: str, rules: dict[str, str], steps: int = 1) -> int:
+    pairs = dict(Counter(pairwise(polymer)).most_common())
+    for s in range(steps):
+        new_pairs = defaultdict(int)
+        for (l, r), total in pairs.items():
+            if i := rules.get(f"{l}{r}", ""):
+                new_pairs[f"{l}{i}"] += total
+                new_pairs[f"{i}{r}"] += total
+            else:
+                new_pairs[f"{l}{r}"] += total
+        pairs = new_pairs
 
-
-def run_polymerase(polymer: str, rules: dict[str, str], steps: int = 1) -> str:
-    for i in range(steps):
-        polymer = polymerase(polymer, rules)
-        # print(f"After step {i + 1}: {polymer}")
-    return polymer
-
-
-def part1(polymer: str) -> int:
-    counts = Counter(polymer).most_common()
-    return counts[0][1] - counts[-1][1]
+    counter = Counter()
+    counter[polymer[0]] += 1
+    counter[polymer[-1]] += 1
+    for (l, r), total in pairs.items():
+        counter[l] += total
+        counter[r] += total
+    counts = counter.most_common()
+    return (counts[0][1] - counts[-1][1]) // 2
 
 
 def main():
@@ -38,8 +35,8 @@ def main():
             pair, insert = line.strip().split(" -> ")
             rules[pair] = insert
 
-    polymer = run_polymerase(template, rules, 10)
-    print("Part1: ", part1(polymer))
+    print("Part1: ", run_polymerase(template, rules, 10))
+    print("Part2: ", run_polymerase(template, rules, 40))
 
 
 if __name__ == "__main__":
