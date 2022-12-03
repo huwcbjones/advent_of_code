@@ -8,10 +8,10 @@ fn main() -> ExitCode {
         println!("Usage: <input>");
         return ExitCode::FAILURE;
     }
-    let file = util::read_lines(&args[1]).unwrap();
+    let lines = util::read_lines(&args[1]).unwrap();
     let mut running_total: u64 = 0;
     let mut calories: Vec<u64> = Vec::new();
-    for line in file.flatten() {
+    for line in lines.flatten() {
         let entry = line.trim();
         if entry.is_empty() {
             calories.push(running_total);
